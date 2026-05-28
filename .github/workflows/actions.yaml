@@ -17,12 +17,14 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Bootstrap: install git and Node.js if missing
-            if ! command -v node &> /dev/null; then
+            # Bootstrap: install git and Node.js 20+ if missing or outdated
+            NODE_MAJOR=$(node -e "console.log(parseInt(process.versions.node))" 2>/dev/null || echo 0)
+            if [ "$NODE_MAJOR" -lt 20 ]; then
               if command -v dnf &> /dev/null; then
-                sudo dnf install -y nodejs npm git
+                sudo dnf install -y nodejs20 git
               elif command -v yum &> /dev/null; then
-                sudo yum install -y nodejs npm git
+                curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+                sudo yum install -y nodejs git
               fi
             fi
 
