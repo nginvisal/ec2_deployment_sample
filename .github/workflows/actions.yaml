@@ -1,12 +1,46 @@
 name: Deployment
 run-name: Deploying to EC2
+
 on:
   push:
     branches:
       - main
+
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        run: echo "Repository is ${{ github.repository }}"
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Bootstrap: install Node.js if missing
+            if ! command -v node &> /dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            # Bootstrap: install git if missing
+            if ! command -v git &> /dev/null; then
+              sudo apt-get install -y git
+            fi
+
+            # Bootstrap: install PM2 if missing
+            if ! command -v pm2 &> /dev/null; then
+              sudo npm install -g pm2
+            fi
+
+            # Bootstrap: clone repo on first deploy
+            if [ ! -d "${{ secrets.EC2_APP_DIR }}" ]; then
+              git clone ${{ secrets.REPO_URL }} ${{ secrets.EC2_APP_DIR }}
+            fi
+
+            # Deploy
+            cd ${{ secrets.EC2_APP_DIR }}
+            git pull origin main
+            npm ci
+            npm run build
+            pm2 restart nextjs-app || pm2 start npm --name "nextjs-app" -- start
