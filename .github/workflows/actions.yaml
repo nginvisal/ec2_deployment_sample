@@ -1,0 +1,12 @@
+name: Deployment
+run-name: Deploying to EC2
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        run: echo "Repository is ${{ github.repository }}"
