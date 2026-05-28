@@ -23,7 +23,6 @@ jobs:
               if command -v dnf &> /dev/null; then
                 sudo dnf remove -y nodejs
                 sudo dnf install -y nodejs20 git
-                sudo ln -sf /usr/bin/node-20 /usr/bin/node
               elif command -v yum &> /dev/null; then
                 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
                 sudo yum install -y nodejs git
